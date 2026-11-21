@@ -32,6 +32,7 @@ PHP 8 + MySQL app in `members/`, running on the same Hostinger site.
 - `members/join.php`, `login.php`, `index.php` (member card with QR, points, vouchers), `pin.php`, `rules.php`, `privacy.php`
 - `members/contact.php` - questions, bookings, complaints and ideas (reference GQ-000123)
 - `members/staff/` - staff log-in: Till (find member, add points by bill + slip number, accept vouchers, reset PIN), Inbox, Posts (schedule website updates, optional auto-post to the Facebook Page), Staff (admin), Settings (admin: connect Facebook)
+- AI writing (Posts page): staff type notes, Anthropic (Claude) or OpenAI drafts the post; staff review before saving. Keys are set by an admin in Settings and stored only in the database. Every draft ends with the under-18 notice.
 - `members/api/posts.php` - published posts for the website's Updates page
 - `members/cron.php` - run every 5 minutes by the hosting cron job to send scheduled posts to Facebook
 - Database credentials and rewards rules live in `gesond-members-config.php` **outside** `public_html`, written once by `members/setup.php`. Never commit it.
