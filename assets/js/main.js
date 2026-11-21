@@ -1,0 +1,120 @@
+(function () {
+  var WA = "27826439779";
+  var yr = document.getElementById("yr");
+  if (yr) yr.textContent = new Date().getFullYear();
+
+  /* Mobile menu */
+  var toggle = document.querySelector(".nav__toggle");
+  var menu = document.getElementById("menu");
+  if (toggle && menu) {
+    toggle.addEventListener("click", function () {
+      var open = menu.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    });
+    menu.addEventListener("click", function (e) {
+      if (e.target.tagName === "A") { menu.classList.remove("open"); toggle.setAttribute("aria-expanded", "false"); toggle.setAttribute("aria-label", "Open menu"); }
+    });
+  }
+
+  /* 18+ confirmation, remembered where the browser allows */
+  var gate = document.getElementById("agegate");
+  var KEY = "gesond_age_ok";
+  var ok = false;
+  try { ok = localStorage.getItem(KEY) === "1"; } catch (e) {}
+  if (gate && !ok) {
+    gate.hidden = false;
+    document.body.style.overflow = "hidden";
+    document.getElementById("ag-yes").focus();
+    document.getElementById("ag-yes").addEventListener("click", function () {
+      try { localStorage.setItem(KEY, "1"); } catch (e) {}
+      gate.hidden = true;
+      document.body.style.overflow = "";
+    });
+    document.getElementById("ag-no").addEventListener("click", function () {
+      document.getElementById("ag-msg").hidden = false;
+    });
+  }
+
+  /* Events: split into upcoming and recent using South African date */
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function parts(iso) { var p = iso.split("-").map(Number); var d = new Date(Date.UTC(p[0], p[1] - 1, p[2])); return { y: p[0], m: MONTHS[p[1] - 1], d: p[2], wd: DAYS[d.getUTCDay()] }; }
+  function todaySA() { var n = new Date(Date.now() + 2 * 3600 * 1000); return n.toISOString().slice(0, 10); }
+
+  function ticket(ev, isNext, hero) {
+    var p = parts(ev.date);
+    var facts = [];
+    if (ev.start) facts.push("From " + ev.start.replace(":", "h"));
+    if (ev.entry) facts.push(ev.entry);
+    if (ev.cooler) facts.push(ev.cooler);
+    (ev.genres || []).forEach(function (g) { facts.push(g); });
+    var lineup = (ev.lineup || []).join(", ");
+    return '<article class="ticket' + (hero ? " ticket--hero" : "") + '">' +
+      '<div class="ticket__stub"><span class="ticket__wd">' + p.wd.slice(0, 3) + '</span><span class="ticket__day">' + p.d + '</span><span class="ticket__mon">' + p.m + '</span><span class="ticket__yr">' + p.y + '</span></div>' +
+      '<div class="ticket__body">' +
+      (isNext ? '<span class="ticket__status">Next up</span>' : "") +
+      (ev.series && ev.title.toLowerCase().indexOf(ev.series.toLowerCase()) !== 0 ? '<p class="ticket__series">' + esc(ev.series) + '</p>' : "") +
+      '<h3 class="ticket__title">' + esc(ev.title) + '</h3>' +
+      (ev.headline ? '<p class="ticket__headline">' + esc(ev.headline) + '</p>' : "") +
+      (lineup ? '<p class="ticket__lineup">' + esc(lineup) + (ev.mc ? ". MC: " + esc(ev.mc) : "") + '</p>' : "") +
+      (facts.length ? '<div class="ticket__facts">' + facts.map(function (f) { return "<span>" + esc(f) + "</span>"; }).join("") + "</div>" : "") +
+      "</div></article>";
+  }
+  function emptyTicket(hero) {
+    return '<article class="ticket ticket--empty' + (hero ? " ticket--hero" : "") + '">' +
+      '<div class="ticket__stub"><span class="ticket__day">?</span><span class="ticket__mon">Soon</span></div>' +
+      '<div class="ticket__body"><h3 class="ticket__title">Next date coming soon</h3>' +
+      '<p class="ticket__lineup">We announce new sessions on WhatsApp first. Join the list to hear the date and line-up as soon as they\'re confirmed.</p>' +
+      '<a class="btn btn--gold" href="#join">Join the WhatsApp list</a></div></article>';
+  }
+
+  var events = (window.GESOND_EVENTS || []).filter(function (e) { return e && e.date && e.title; });
+  var today = todaySA();
+  var up = events.filter(function (e) { return e.date >= today; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+  var past = events.filter(function (e) { return e.date < today; }).sort(function (a, b) { return a.date > b.date ? -1 : 1; }).slice(0, 6);
+
+  var nextEl = document.getElementById("next-ticket");
+  if (nextEl) nextEl.innerHTML = up.length ? ticket(up[0], true, true) : emptyTicket(true);
+  var upEl = document.getElementById("upcoming");
+  if (upEl) upEl.innerHTML = up.length ? up.map(function (e, i) { return ticket(e, i === 0, false); }).join("") : '<p class="upcoming__empty">No new dates are confirmed yet. <a href="#join">Join the WhatsApp list</a> to hear about the next session first.</p>';
+  var pastEl = document.getElementById("past");
+  if (pastEl) {
+    pastEl.innerHTML = past.length ? past.map(function (e) {
+      var p = parts(e.date);
+      return '<div class="past__row"><span class="past__date">' + p.wd.slice(0, 3) + " " + p.d + " " + p.m + " " + p.y + '</span><span><span class="past__title">' + esc(e.title) + '</span><br><span class="past__lineup">' + esc((e.lineup || []).join(", ")) + '</span></span><span class="past__lineup">' + esc(e.entry || "") + "</span></div>";
+    }).join("") : '<p class="past__empty">Past sessions will show here.</p>';
+  }
+
+  /* Photos: section stays hidden until photos are listed in gallery.js */
+  var photos = (window.GESOND_PHOTOS || []).filter(function (p) { return p && p.src; });
+  var gal = document.getElementById("gallery");
+  if (gal && photos.length) {
+    gal.innerHTML = photos.map(function (p) {
+      return '<figure><img src="' + esc(p.src) + '" alt="' + esc(p.alt || "Gesond Liquor Restaurant") + '" loading="lazy" width="800" height="600">' + (p.caption ? "<figcaption>" + esc(p.caption) + "</figcaption>" : "") + "</figure>";
+    }).join("");
+    document.getElementById("photos").hidden = false;
+  }
+
+  /* Join form -> WhatsApp message */
+  var form = document.getElementById("join-form");
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var err = document.getElementById("join-err");
+      var name = form.elements.name.value.trim();
+      var age = form.querySelector('input[name="age"]:checked');
+      if (!name || !age) {
+        err.textContent = !name ? "Enter your name so we know who's joining." : "Choose your age group.";
+        err.hidden = false;
+        (!name ? form.elements.name : form.querySelector('input[name="age"]')).focus();
+        return;
+      }
+      err.hidden = true;
+      var into = Array.prototype.map.call(form.querySelectorAll('input[name="into"]:checked'), function (i) { return i.value; });
+      var msg = "Hi Gesond, please add me to the events list.\nName: " + name + "\nAge group: " + age.value + (into.length ? "\nInto: " + into.join(", ") : "");
+      window.open("https://wa.me/" + WA + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
+    });
+  }
+})();
