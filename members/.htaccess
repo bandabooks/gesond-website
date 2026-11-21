@@ -1,0 +1,8 @@
+Options -Indexes
+# Member and staff pages are private: never cache them
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-store, private"
+  Header set X-Frame-Options "DENY"
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "same-origin"
+</IfModule>

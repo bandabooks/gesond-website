@@ -9,5 +9,6 @@ window.GESOND_CONFIG = {
   facebook: "",          // e.g. "https://www.facebook.com/gesond"
   instagram: "",         // e.g. "https://www.instagram.com/gesond"
   tiktok: "",            // e.g. "https://www.tiktok.com/@gesond"
+  linkedin: "",          // e.g. "https://www.linkedin.com/company/gesond"
   youtube: ""
 };

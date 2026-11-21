@@ -18,3 +18,12 @@ ErrorDocument 404 /404.html
   Require all denied
 </FilesMatch>
 RedirectMatch 404 ^/\.hostinger/
+
+# App (PWA) files
+AddType application/manifest+json .webmanifest
+<Files "sw.js">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache"
+    Header set Service-Worker-Allowed "/"
+  </IfModule>
+</Files>

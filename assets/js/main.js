@@ -118,19 +118,24 @@
     if (location.hash) { var t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(function () { t.scrollIntoView(); }, 50); }
   }
 
-  /* Updates page */
+  /* Updates page: posts from the staff Posts page (API) plus the static list */
   var ul = document.getElementById("updates-list");
   if (ul) {
-    var ups = (window.GESOND_UPDATES || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
-    ul.innerHTML = ups.length ? ups.map(function (u) {
-      var p = parts(u.date);
-      return '<article class="update"><p class="update__date">' + p.wd + " " + p.d + " " + p.m + " " + p.y + '</p><h2 class="update__title">' + esc(u.title) + "</h2><p>" + esc(u.text) + "</p>" +
-        (u.link ? '<a class="link" href="' + esc(u.link) + '">Read more</a>' : "") + "</article>";
-    }).join("") : '<p class="upcoming__empty">No updates yet. Join the WhatsApp list to hear from us first.</p>';
+    var render = function (extra) {
+      var ups = extra.concat(window.GESOND_UPDATES || []).sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+      ul.innerHTML = ups.length ? ups.map(function (u) {
+        var p = parts(u.date);
+        return '<article class="update"><p class="update__date">' + p.wd + " " + p.d + " " + p.m + " " + p.y + '</p><h2 class="update__title">' + esc(u.title) + "</h2><p>" + esc(u.text).replace(/\n/g, "<br>") + "</p>" +
+          (u.link ? '<a class="link" href="' + esc(u.link) + '">Read more</a>' : "") + "</article>";
+      }).join("") : '<p class="upcoming__empty">No updates yet. Join the WhatsApp list to hear from us first.</p>';
+    };
+    render([]);
+    if (window.fetch) fetch("/members/api/posts.php", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : { posts: [] }; })
+      .then(function (d) { if (d.posts && d.posts.length) render(d.posts); }).catch(function () {});
   }
 
   /* Social links: only accounts filled in config.js are shown */
-  var SOC = [["facebook", "Facebook"], ["instagram", "Instagram"], ["tiktok", "TikTok"], ["youtube", "YouTube"], ["whatsappChannel", "WhatsApp Channel"]];
+  var SOC = [["facebook", "Facebook"], ["instagram", "Instagram"], ["tiktok", "TikTok"], ["linkedin", "LinkedIn"], ["youtube", "YouTube"], ["whatsappChannel", "WhatsApp Channel"]];
   var socHtml = SOC.filter(function (s) { return CFG[s[0]]; }).map(function (s) { return '<a href="' + esc(CFG[s[0]]) + '" target="_blank" rel="noopener">' + s[1] + "</a>"; }).join("");
   Array.prototype.forEach.call(document.querySelectorAll("[data-social]"), function (el) {
     if (socHtml) el.innerHTML = '<span>Follow Gesond</span>' + socHtml; else el.hidden = true;

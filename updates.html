@@ -10,6 +10,9 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="assets/brand/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gesond">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Updates | Gesond Liquor Restaurant, Mapela">
 <meta property="og:description" content="News, new event dates and specials from Gesond Liquor Restaurant, Mapela. Join the WhatsApp list or follow us.">
@@ -18,7 +21,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="assets/fonts/anton.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/archivo-wdth.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/css/style.css?v=20261121b">
+<link rel="stylesheet" href="assets/css/style.css?v=20261122a">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -42,11 +45,11 @@
     <button class="nav__toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
     <nav id="menu" class="nav__links" aria-label="Main">
       <a href="events.html">What's on</a>
-      <a href="index.html#series">The series</a>
-      <a href="index.html#your-night">Your night</a>
+      <a href="/members/">Rewards</a>
       <a href="index.html#kitchen">Food &amp; drinks</a>
-      <a href="index.html#visit">Visit</a>
       <a href="updates.html">Updates</a>
+      <a href="/members/contact.php">Talk to us</a>
+      <a href="index.html#visit">Visit</a>
       <a href="index.html#join" class="btn btn--gold btn--sm">Join the list</a>
     </nav>
   </div>
@@ -66,6 +69,8 @@
         <ul class="getlist">
           <li><b>WhatsApp list.</b> Line-ups and dates sent straight to your phone. <a href="index.html#join">Join the list</a></li>
           <li id="channel-item" hidden><b>WhatsApp Channel.</b> Follow for announcements. <a id="channel-link" href="#" target="_blank" rel="noopener">Follow the channel</a></li>
+          <li><b>Gesond Rewards.</b> Earn points on every visit and see member news. <a href="/members/join.php">Join free</a></li>
+          <li><b>Questions and ideas.</b> Ask us anything or suggest something new. <a href="/members/contact.php">Talk to us</a></li>
           <li><b>Email.</b> Functions, orders and group bookings. <a href="mailto:info@gesondlifestyle.co.za?subject=Please%20add%20me%20to%20Gesond%20updates">info@gesondlifestyle.co.za</a></li>
         </ul>
         <div class="social social--block" data-social></div>
@@ -81,7 +86,7 @@
     <img src="assets/brand/gesond-logo-600.webp" alt="Gesond Liquor Restaurant" width="220" height="73" loading="lazy">
     <p class="foot__tag">One Love. One Vibe. One Soul.</p>
     <nav class="social" data-social aria-label="Gesond on social media"></nav>
-    <p class="foot__links"><a href="events.html">What's on</a> <a href="updates.html">Updates</a> <a href="index.html#join">Join the WhatsApp list</a></p>
+    <p class="foot__links"><a href="events.html">What's on</a> <a href="/members/">Gesond Rewards</a> <a href="updates.html">Updates</a> <a href="/members/contact.php">Talk to us</a> <a href="/members/contact.php?type=idea">Share an idea</a> <a href="/members/privacy.php">Privacy</a></p>
     <p>Gesond Enterprise (Pty) Ltd, trading as Gesond Liquor Restaurant. Reg. No. 2021/658589/07. VAT No. 4460303409.</p>
     <p class="foot__warn">Not for sale to persons under the age of 18. Drink responsibly. Don't drink and drive.</p>
     <p class="foot__copy">&copy; <span id="yr">2026</span> Gesond Enterprise (Pty) Ltd</p>
@@ -92,9 +97,10 @@
   <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path fill="currentColor" d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3zm0 23.7c-2 0-4-.6-5.7-1.6l-.4-.2-3.9 1 1-3.8-.3-.4A10.7 10.7 0 1 1 16 26.7zm5.9-8c-.3-.2-1.9-.9-2.2-1s-.5-.2-.7.2-.8 1-1 1.2-.4.2-.7 0a8.8 8.8 0 0 1-4.4-3.8c-.3-.6.3-.5.9-1.7.1-.2 0-.4 0-.5l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6a1.2 1.2 0 0 0-.9.4 3.6 3.6 0 0 0-1.1 2.7 6.3 6.3 0 0 0 1.3 3.3c.2.2 2.3 3.6 5.7 5 2.1.9 3 1 4 .8.7-.1 1.9-.8 2.2-1.5s.3-1.4.2-1.5-.3-.2-.6-.3z"/></svg>
 </a>
 
-<script src="assets/js/config.js?v=20261121b"></script>
-<script src="assets/js/events.js?v=20261121b"></script>
-<script src="assets/js/updates.js?v=20261121b"></script>
-<script src="assets/js/main.js?v=20261121b" defer></script>
+<script src="assets/js/config.js?v=20261122a"></script>
+<script src="assets/js/events.js?v=20261122a"></script>
+<script src="assets/js/updates.js?v=20261122a"></script>
+<script src="assets/js/main.js?v=20261122a" defer></script>
+<script src="/assets/js/pwa.js?v=20261122a" defer></script>
 </body>
 </html>
