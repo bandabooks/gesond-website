@@ -13,7 +13,10 @@ favicon.ico           Icon cut from the supplied logo's gold O
 robots.txt, sitemap.xml
 .htaccess             HTTPS + www redirect, 404 page, caching (Apache / Hostinger)
 assets/css/style.css  Styles
-assets/js/events.js   THE EVENTS LIST - edit this to update What's on
+assets/js/events.js   THE EVENTS LIST - edit this to update What's on (events.html + home)
+assets/js/updates.js  News shown on updates.html
+assets/js/config.js   WhatsApp number and social media links
+assets/img/events/    Event posters
 assets/js/main.js     Menu, 18+ check, event tickets, WhatsApp join form
 assets/brand/         Supplied Gesond logo (scaled only) and icons
 assets/fonts/         Anton + Archivo (self-hosted, SIL OFL licences included)

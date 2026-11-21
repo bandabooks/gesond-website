@@ -1,4 +1,4 @@
-# Gesond Liquor Restaurant - Website Content (v2, 21 November 2026)
+# Gesond Liquor Restaurant - Website Content (v3, 21 November 2026)
 
 Audience: everyone 18+ in Mapela and the Mokopane area, from young dance-floor regulars to mid-age and older guests who prefer food and a relaxed evening.
 Main job of the site: show what's on, explain the series, and get people onto the WhatsApp events list.
@@ -21,16 +21,16 @@ Lekompo, Amapiano and Afro House sessions, good food and a cold drink at Gesond 
 [Join the WhatsApp list] [See what's on]
 Side panel "Next up at Gesond": shows the next confirmed event as a ticket. If none is confirmed: "Next date coming soon. We announce new sessions on WhatsApp first..."
 
-Moving band: Lekompo, Amapiano, Afro House, Saturday Likup, Gesond Presents, One Love, One Vibe, One Soul
+Moving band: Lekompo, Amapiano, Afro House, Saturday Linkup, Gesond Presents, One Love, One Vibe, One Soul
 
 ## What's on
 Confirmed dates, line-ups and entry. New dates go to the WhatsApp list first.
 (Event tickets from assets/js/events.js; past events move to "Recent sessions" automatically.)
-Recent sessions: Saturday Likup 8, Sat 7 Nov 2026. DJ Task, DJ Essential, Mr Faraz, Quit Soul, Mr Fantron, Lunga SA, DJ Thabang. MC: Maghezi feat. Senzeni SA. Free entrance, cooler box R50.
+Recent sessions: Saturday Linkup 8, Sat 7 Nov 2026. DJ Task, DJ Essential, Mr Faraz, Quit Soul, Mr Fantron, Lunga SA, DJ Thabang. MC: Maghezi feat. Senzeni SA. Free entrance, cooler box R50.
 
 ## The series
 Every Gesond night belongs to a series, so you always know the kind of night you're walking into.
-- Saturday Likup (flagship): A full line-up of local DJs takes turns on the decks from early evening until late, with an MC keeping the floor moving. Eight editions in and still growing. Lekompo, Amapiano.
+- Saturday Linkup (flagship): A full line-up of local DJs takes turns on the decks from early evening until late, with an MC keeping the floor moving. Ten editions in and still growing. Lekompo, Amapiano.
 - Gesond Presents: Headline sets and live performances from guest DJs and artists, announced with their own posters.
 - Lekompo Vibes: The sound of Limpopo, played loud, by DJs who know it best.
 - Afro House Back to Back: DJs trade sets back to back for a deeper, longer groove.
@@ -48,7 +48,7 @@ Fields: Your name; Age group (18 to 24 / 25 to 34 / 35 to 49 / 50 and over); Wha
 We only use your number to send Gesond event news. Ask us to remove you at any time.
 
 ## DJs and artists: play at Gesond
-We book local talent for Saturday Likup and guest slots for Gesond Presents. Send your name, genre and a link to a recent mix.
+We book local talent for Saturday Linkup and guest slots for Gesond Presents. Send your name, genre and a link to a recent mix.
 [Send your mix on WhatsApp] [Email a booking request]
 
 ## Food and drinks
@@ -82,3 +82,8 @@ Not for sale to persons under the age of 18. Drink responsibly. Don't drink and 
 
 ## Still to supply
 Confirmed dates for the next sessions (add to assets/js/events.js), trading hours, current menu, social media links, and real photos of the venue and past nights (with consent of anyone shown).
+
+## Pages added in v3
+- events.html "What's on at Gesond": every upcoming event with its poster(s), line-up, entry, and Share on WhatsApp / Share on Facebook / Copy link. Recent sessions below. Data: assets/js/events.js.
+- updates.html "Gesond updates": news for guests (assets/js/updates.js) plus ways to get updates (WhatsApp list, WhatsApp Channel when set, email, social links).
+- Social links: fill in assets/js/config.js (Facebook, Instagram, TikTok, YouTube, WhatsApp Channel). Empty ones stay hidden.

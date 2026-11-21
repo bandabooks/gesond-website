@@ -1,5 +1,6 @@
 (function () {
-  var WA = "27826439779";
+  var CFG = window.GESOND_CONFIG || {};
+  var WA = CFG.whatsappNumber || "27826439779";
   var yr = document.getElementById("yr");
   if (yr) yr.textContent = new Date().getFullYear();
 
@@ -45,6 +46,7 @@
 
   function ticket(ev, isNext, hero) {
     var p = parts(ev.date);
+    var status = ev.date === today ? "Tonight" : "Next up";
     var facts = [];
     if (ev.start) facts.push("From " + ev.start.replace(":", "h"));
     if (ev.entry) facts.push(ev.entry);
@@ -54,9 +56,9 @@
     return '<article class="ticket' + (hero ? " ticket--hero" : "") + '">' +
       '<div class="ticket__stub"><span class="ticket__wd">' + p.wd.slice(0, 3) + '</span><span class="ticket__day">' + p.d + '</span><span class="ticket__mon">' + p.m + '</span><span class="ticket__yr">' + p.y + '</span></div>' +
       '<div class="ticket__body">' +
-      (isNext ? '<span class="ticket__status">Next up</span>' : "") +
+      (isNext ? '<span class="ticket__status">' + status + '</span>' : "") +
       (ev.series && ev.title.toLowerCase().indexOf(ev.series.toLowerCase()) !== 0 ? '<p class="ticket__series">' + esc(ev.series) + '</p>' : "") +
-      '<h3 class="ticket__title">' + esc(ev.title) + '</h3>' +
+      '<h3 class="ticket__title">' + (ev.id ? '<a href="events.html#' + esc(ev.id) + '">' + esc(ev.title) + '</a>' : esc(ev.title)) + '</h3>' +
       (ev.headline ? '<p class="ticket__headline">' + esc(ev.headline) + '</p>' : "") +
       (lineup ? '<p class="ticket__lineup">' + esc(lineup) + (ev.mc ? ". MC: " + esc(ev.mc) : "") + '</p>' : "") +
       (facts.length ? '<div class="ticket__facts">' + facts.map(function (f) { return "<span>" + esc(f) + "</span>"; }).join("") + "</div>" : "") +
@@ -85,6 +87,57 @@
       var p = parts(e.date);
       return '<div class="past__row"><span class="past__date">' + p.wd.slice(0, 3) + " " + p.d + " " + p.m + " " + p.y + '</span><span><span class="past__title">' + esc(e.title) + '</span><br><span class="past__lineup">' + esc((e.lineup || []).join(", ")) + '</span></span><span class="past__lineup">' + esc(e.entry || "") + "</span></div>";
     }).join("") : '<p class="past__empty">Past sessions will show here.</p>';
+  }
+
+  /* Full events page: posters, details and share links */
+  var full = document.getElementById("events-full");
+  if (full) {
+    var base = location.origin + location.pathname.replace(/[^/]*$/, "") + "events.html";
+    full.innerHTML = up.length ? up.map(function (ev, i) {
+      var p = parts(ev.date);
+      var url = base + "#" + (ev.id || "");
+      var shareText = ev.title + ", " + p.wd + " " + p.d + " " + p.m + " " + p.y + " at Gesond Liquor Restaurant, Mapela. " + url;
+      var posters = (ev.posters || []).map(function (src) {
+        return '<a class="evcard__poster" href="' + esc(src) + '" target="_blank" rel="noopener"><img src="' + esc(src) + '" alt="Poster for ' + esc(ev.title) + '" loading="' + (i ? "lazy" : "eager") + '"></a>';
+      }).join("");
+      return '<article class="evcard" id="' + esc(ev.id || "") + '">' +
+        (posters ? '<div class="evcard__posters">' + posters + "</div>" : "") +
+        '<div class="evcard__info">' + ticket(ev, i === 0, false) +
+        '<div class="evcard__share"><span>Share with your crew</span>' +
+        '<a class="btn btn--sm btn--gold" href="https://wa.me/?text=' + encodeURIComponent(shareText) + '" target="_blank" rel="noopener">Share on WhatsApp</a>' +
+        '<a class="btn btn--sm btn--line" href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url) + '" target="_blank" rel="noopener">Share on Facebook</a>' +
+        '<button class="btn btn--sm btn--line" type="button" data-copy="' + esc(url) + '">Copy link</button></div>' +
+        "</div></article>";
+    }).join("") : '<p class="upcoming__empty">No new dates are confirmed yet. <a href="index.html#join">Join the WhatsApp list</a> to hear about the next session first.</p>';
+    full.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-copy]");
+      if (!b) return;
+      var done = function () { b.textContent = "Link copied"; setTimeout(function () { b.textContent = "Copy link"; }, 2000); };
+      if (navigator.clipboard) navigator.clipboard.writeText(b.getAttribute("data-copy")).then(done, function () { b.textContent = "Copy failed"; });
+    });
+    if (location.hash) { var t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(function () { t.scrollIntoView(); }, 50); }
+  }
+
+  /* Updates page */
+  var ul = document.getElementById("updates-list");
+  if (ul) {
+    var ups = (window.GESOND_UPDATES || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+    ul.innerHTML = ups.length ? ups.map(function (u) {
+      var p = parts(u.date);
+      return '<article class="update"><p class="update__date">' + p.wd + " " + p.d + " " + p.m + " " + p.y + '</p><h2 class="update__title">' + esc(u.title) + "</h2><p>" + esc(u.text) + "</p>" +
+        (u.link ? '<a class="link" href="' + esc(u.link) + '">Read more</a>' : "") + "</article>";
+    }).join("") : '<p class="upcoming__empty">No updates yet. Join the WhatsApp list to hear from us first.</p>';
+  }
+
+  /* Social links: only accounts filled in config.js are shown */
+  var SOC = [["facebook", "Facebook"], ["instagram", "Instagram"], ["tiktok", "TikTok"], ["youtube", "YouTube"], ["whatsappChannel", "WhatsApp Channel"]];
+  var socHtml = SOC.filter(function (s) { return CFG[s[0]]; }).map(function (s) { return '<a href="' + esc(CFG[s[0]]) + '" target="_blank" rel="noopener">' + s[1] + "</a>"; }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-social]"), function (el) {
+    if (socHtml) el.innerHTML = '<span>Follow Gesond</span>' + socHtml; else el.hidden = true;
+  });
+  if (CFG.whatsappChannel && document.getElementById("channel-item")) {
+    document.getElementById("channel-link").href = CFG.whatsappChannel;
+    document.getElementById("channel-item").hidden = false;
   }
 
   /* Photos: section stays hidden until photos are listed in gallery.js */
