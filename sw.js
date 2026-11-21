@@ -1,8 +1,8 @@
 /* Gesond service worker: makes the site installable and quick to open.
    Pages are always fetched fresh when online (so events stay current); a cached copy is shown offline.
    Member, staff and API pages are never cached. */
-const VERSION = 'gesond-20261122a';
-const CORE = ['/', '/events.html', '/updates.html', '/offline.html', '/assets/css/style.css?v=20261122a',
+const VERSION = 'gesond-20261122b';
+const CORE = ['/', '/events.html', '/updates.html', '/offline.html', '/assets/css/style.css?v=20261122b',
   '/assets/fonts/anton.woff2', '/assets/fonts/archivo-wdth.woff2', '/assets/brand/gesond-logo-600.webp', '/assets/brand/icon-192.png'];
 
 self.addEventListener('install', (e) => {
