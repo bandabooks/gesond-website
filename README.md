@@ -39,6 +39,10 @@ Open `assets/js/events.js`, copy the example block, change the details and save.
 
 Copy photos into `assets/img/gallery/` and list them in `assets/js/gallery.js`. The "Inside Gesond" section shows only once a photo is listed.
 
+## After editing CSS or JS
+
+Bump the `?v=` number on the `<script>` and `<link>` tags in every .html page so visitors get the new files instead of a cached copy.
+
 ## Editing content
 
 All text is in `index.html`. Website copy for review is in `WEBSITE_CONTENT.md`.
