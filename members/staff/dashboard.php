@@ -82,10 +82,11 @@ if (!ai_provider()) $alerts[] = ['info', 'AI writing not connected', 'settings.p
 if ($postsUpcoming === 0) $alerts[] = ['info', 'No posts scheduled ahead', 'posts.php'];
 
 /* ---- small bar chart, server-drawn SVG, one series, hover via <title> ---- */
-function bars(array $series, string $key, string $title, callable $fmt): string {
+function bars(array $series, string $key, string $title, callable $fmt, int $floor = 2): string {
     $w = 640; $h = 170; $l = 44; $r = 8; $t = 12; $b = 26;
     $vals = array_map(fn($x) => $x[$key], $series);
-    $max = max(2, max($vals));
+    if (max($vals) <= 0) return '<p class="chart__empty">Nothing recorded in this period yet.</p>';
+    $max = max($floor, max($vals));
     $step = pow(10, floor(log10($max))); $nice = ceil($max / $step) * $step; if ($nice / $step > 5 && $step > 1) $nice = ceil($max / ($step * 2)) * $step * 2;
     $n = count($series); $bw = ($w - $l - $r) / $n; $gap = $n > 40 ? 1 : 2;
     $o = '<svg class="chart" viewBox="0 0 ' . $w . ' ' . $h . '" role="img" aria-label="' . e($title) . '">';
@@ -145,7 +146,7 @@ page_head('Dashboard', '../', null, $s);
   </section>
   <section class="panel">
     <h2 class="panel__title">Spend recorded on Rewards per day</h2>
-    <?= bars($series, 's', 'Spend recorded on Rewards per day', fn($v) => rands($v)) ?>
+    <?= bars($series, 's', 'Spend recorded on Rewards per day', fn($v) => rands($v), 10000) ?>
     <p class="fine">Only bills where a member's points were added. This is not total sales; use the POS for those.</p>
   </section>
 </div>

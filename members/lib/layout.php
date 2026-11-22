@@ -4,7 +4,7 @@ declare(strict_types=1);
 /* $base: path from the current page to /members/ ("" or "../") */
 function page_head(string $title, string $base = '', ?array $member = null, ?array $staff = null): void {
     $flash = flash();
-    $v = '20261122c';
+    $v = '20261122d';
     ?><!DOCTYPE html>
 <html lang="en-ZA">
 <head>
@@ -66,7 +66,7 @@ function page_foot(): void {
     <p class="foot__warn">Not for sale to persons under the age of 18. Drink responsibly.</p>
   </div>
 </footer>
-<script src="/assets/js/pwa.js?v=<?= '20261122c' ?>" defer></script>
+<script src="/assets/js/pwa.js?v=<?= '20261122d' ?>" defer></script>
 </body>
 </html>
 <?php

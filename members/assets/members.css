@@ -146,6 +146,7 @@ details summary { cursor: pointer; color: var(--gold); font-weight: 600; margin-
 .chart__tick { fill: var(--smoke); font-size: 11px; font-family: var(--body); }
 .chart__mark { fill: var(--gold); }
 .chart__hit { fill: transparent; }
+.chart__empty { color: var(--smoke); padding: 48px 0; text-align: center; border: 1px dashed rgba(230,178,62,.2); border-radius: 10px; margin: 0; }
 .chart__bar:hover .chart__mark { fill: #F2C65A; }
 .chart__bar:hover .chart__hit { fill: rgba(230,178,62,.08); }
 .feed li { display: grid; grid-template-columns: 110px 1fr auto; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .92rem; }
