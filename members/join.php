@@ -32,6 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (preg_match('/^(\d)\1{5}$/', $pin) || in_array($pin, ['123456', '654321', '012345'], true)) $err['pin'] = 'That PIN is too easy to guess. Choose another.';
     elseif ($pin !== $pin2) $err['pin2'] = 'The two PINs don\'t match.';
     if (empty($_POST['popia'])) $err['popia'] = 'Tick the box to agree to the privacy notice.';
+    // Stop scripted sign-ups. The limit allows a busy night of guests joining on the venue Wi-Fi.
+    $joinKey = 'join:' . client_ip();
+    if (($_POST['website'] ?? '') !== '') $err['first_name'] = 'Something went wrong. Please try again.';
+    elseif (too_many_attempts($joinKey, 30, 60)) $err['first_name'] = 'Many people joined from this connection in the last hour. Please try again later, or use your mobile data.';
 
     if (!$err && $phone) {
         $st = db()->prepare('SELECT id FROM members WHERE phone = ?');
@@ -47,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $no = 'GL' . str_pad((string)$id, 6, '0', STR_PAD_LEFT);
         $pdo->prepare('UPDATE members SET member_no = ? WHERE id = ?')->execute([$no, $id]);
         $pdo->commit();
+        record_attempt($joinKey);
         audit('member', $id, 'join', $id, ['marketing_optin' => $v['marketing']]);
         session_regenerate_id(true);
         $_SESSION['member_id'] = $id;
@@ -73,6 +78,7 @@ page_head('Join free');
   </section>
   <form method="post" class="mform card-form" novalidate>
     <?= csrf_field() ?>
+    <label class="hp" aria-hidden="true">Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label>
     <div class="row2">
       <label>First name<input name="first_name" autocomplete="given-name" required value="<?= e($v['first_name']) ?>"><?= ferr($err, 'first_name') ?></label>
       <label>Surname<input name="last_name" autocomplete="family-name" required value="<?= e($v['last_name']) ?>"><?= ferr($err, 'last_name') ?></label>

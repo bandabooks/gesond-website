@@ -156,3 +156,7 @@ details summary { cursor: pointer; color: var(--gold); font-weight: 600; margin-
   .dashgrid { grid-template-columns: 1fr; }
   .feed li { grid-template-columns: 1fr; gap: 2px; }
 }
+
+.adminbox { margin-top: 14px; border-top: 1px solid rgba(230,178,62,.18); padding-top: 10px; }
+.adminbox summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+.adminbox .mform { margin-top: 10px; }

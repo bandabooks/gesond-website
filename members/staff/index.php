@@ -117,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'reset_pin' && $mem) {
+        if (member_is_closed($mem)) { flash('This membership is closed.', 'err'); redirect($back); }
         $tmp = (string)random_int(100000, 999999);
         db()->prepare('UPDATE members SET pin_hash = ?, must_change_pin = 1 WHERE id = ?')->execute([password_hash($tmp, PASSWORD_DEFAULT), $mid]);
         clear_attempts('m-ph:' . $mem['phone']);
@@ -167,7 +168,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect($back);
     }
 
+    if ($action === 'change_phone' && $mem && $isAdmin && !member_is_closed($mem)) {
+        $new = normalise_phone((string)($_POST['new_phone'] ?? ''));
+        $reason = trim((string)($_POST['reason'] ?? ''));
+        if (!$new) { flash('Enter the new South African cellphone number.', 'err'); redirect($back); }
+        if (mb_strlen($reason) < 3) { flash('Say how the request was received and checked, for example "Email from member, ID checked at till".', 'err'); redirect($back); }
+        $st = db()->prepare('SELECT member_no FROM members WHERE phone = ? AND id <> ?');
+        $st->execute([$new, $mid]);
+        if ($other = $st->fetchColumn()) { flash('That number already belongs to member ' . $other . '.', 'err'); redirect($back); }
+        db()->prepare('UPDATE members SET phone = ? WHERE id = ?')->execute([$new, $mid]);
+        clear_attempts('m-ph:' . $mem['phone']);
+        audit('staff', $sid, 'member_phone_changed', $mid, ['old' => $mem['phone'], 'new' => $new, 'reason' => mb_substr($reason, 0, 200)]);
+        flash('Cellphone number changed to ' . format_phone($new) . '. The member logs in with the new number and the same PIN.');
+        redirect($back);
+    }
+
+    if ($action === 'close' && $mem && $isAdmin && !member_is_closed($mem)) {
+        $reason = trim((string)($_POST['reason'] ?? ''));
+        if (mb_strlen($reason) < 3 || strtoupper(trim((string)($_POST['confirm'] ?? ''))) !== strtoupper((string)$mem['member_no'])) {
+            flash('Type the member number to confirm, and say how the request was received.', 'err'); redirect($back);
+        }
+        $pdo = db();
+        $pdo->beginTransaction();
+        $pdo->prepare('SELECT id FROM members WHERE id = ? FOR UPDATE')->execute([$mid]);
+        // 1. Cancel unused vouchers (points return to the balance, as for any cancellation)
+        $st = $pdo->prepare("SELECT * FROM vouchers WHERE member_id = ? AND status = 'active'");
+        $st->execute([$mid]);
+        foreach ($st->fetchAll() as $vc) {
+            $pdo->prepare("UPDATE vouchers SET status = 'cancelled' WHERE id = ?")->execute([$vc['id']]);
+            $r = $pdo->prepare("SELECT id FROM points_ledger WHERE voucher_id = ? AND type = 'redeem'"); $r->execute([$vc['id']]);
+            $pdo->prepare("INSERT INTO points_ledger (member_id, type, points, note, voucher_id, reverses_id, staff_id, created_at) VALUES (?,'reversal',?,?,?,?,?,NOW())")
+                ->execute([$mid, (int)$vc['points'], 'Voucher ' . $vc['code'] . ' cancelled: membership closed', $vc['id'], ((int)$r->fetchColumn()) ?: null, $sid]);
+        }
+        // 2. Unused points lapse (the rules give points no cash value); recorded, never deleted
+        $bal = (int)$pdo->query('SELECT COALESCE(SUM(points),0) FROM points_ledger WHERE member_id = ' . $mid)->fetchColumn();
+        if ($bal > 0) {
+            $pdo->prepare("INSERT INTO points_ledger (member_id, type, points, note, staff_id, created_at) VALUES (?,'reversal',?,?,?,NOW())")
+                ->execute([$mid, -$bal, 'Membership closed: unused points lapsed', $sid]);
+        }
+        // 3. Remove personal details; the member number, points and voucher records stay for the accounting records
+        $pdo->prepare("UPDATE members SET first_name = 'Closed', last_name = 'member', phone = ?, birth_date = '1900-01-01', email = NULL,
+            pin_hash = ?, must_change_pin = 0, marketing_optin = 0, status = 'suspended' WHERE id = ?")
+            ->execute(['X' . str_pad((string)$mid, 9, '0', STR_PAD_LEFT), password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT), $mid]);
+        $pdo->prepare("UPDATE enquiries SET name = 'Closed member', phone = NULL, email = NULL WHERE member_id = ?")->execute([$mid]);
+        $pdo->commit();
+        audit('staff', $sid, 'member_closed', $mid, ['member_no' => $mem['member_no'], 'points_lapsed' => max(0, $bal), 'reason' => mb_substr($reason, 0, 200)]);
+        flash('Membership ' . $mem['member_no'] . ' closed. Personal details removed; ' . max(0, $bal) . ' unused points lapsed. Points and voucher records are kept for the accounts.');
+        redirect($back);
+    }
+
     if ($action === 'status' && $mem && $isAdmin) {
+        if (member_is_closed($mem)) { flash('This membership is closed and cannot be reactivated. The guest can join again.', 'err'); redirect($back); }
         $new = $mem['status'] === 'active' ? 'suspended' : 'active';
         db()->prepare('UPDATE members SET status = ? WHERE id = ?')->execute([$new, $mid]);
         audit('staff', $sid, 'member_' . $new, $mid);
@@ -228,8 +279,8 @@ page_head('Till', '../', null, $s);
 <section class="memberpanel">
   <div class="memberpanel__head">
     <div>
-      <h2><?= e($mem['first_name'] . ' ' . $mem['last_name']) ?> <span class="tag"><?= e($mem['member_no']) ?></span> <?php if ($mem['status'] !== 'active'): ?><span class="tag tag--bad">Suspended</span><?php endif; ?></h2>
-      <p class="muted"><?= e(format_phone($mem['phone'])) ?> · Age <?= $age ?> · Member since <?= e(date('j M Y', strtotime($mem['created_at']))) ?></p>
+      <h2><?= e($mem['first_name'] . ' ' . $mem['last_name']) ?> <span class="tag"><?= e($mem['member_no']) ?></span> <?php if (member_is_closed($mem)): ?><span class="tag tag--bad">Closed</span><?php elseif ($mem['status'] !== 'active'): ?><span class="tag tag--bad">Suspended</span><?php endif; ?></h2>
+      <p class="muted"><?php if (member_is_closed($mem)): ?>Closed membership: personal details removed<?php else: ?><?= e(format_phone($mem['phone'])) ?> · Age <?= $age ?><?php endif; ?> · Member since <?= e(date('j M Y', strtotime($mem['created_at']))) ?></p>
     </div>
     <div class="balance balance--sm"><p class="balance__label">Points</p><p class="balance__pts"><?= $bal ?></p></div>
   </div>
@@ -256,7 +307,20 @@ page_head('Till', '../', null, $s);
       </ul>
       <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="reset_pin"><input type="hidden" name="member_id" value="<?= $mid ?>"><button class="btn btn--sm btn--line" type="submit" onclick="return confirm('Check the member\'s ID first. Reset their PIN?')">Reset PIN</button></form>
       <?php if ($isAdmin): ?>
+      <?php if (!member_is_closed($mem)): ?>
       <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="status"><input type="hidden" name="member_id" value="<?= $mid ?>"><button class="btn btn--sm btn--line" type="submit" onclick="return confirm('Change this membership\'s status?')"><?= $mem['status'] === 'active' ? 'Suspend membership' : 'Reactivate membership' ?></button></form>
+      <details class="adminbox"><summary>Change cellphone number</summary>
+        <form method="post" class="mform"><?= csrf_field() ?><input type="hidden" name="action" value="change_phone"><input type="hidden" name="member_id" value="<?= $mid ?>">
+          <label>New cellphone<input name="new_phone" inputmode="tel" required placeholder="082 123 4567"></label>
+          <label>How was the request received and checked?<input name="reason" required maxlength="200" placeholder="Email from member, ID checked at till"></label>
+          <button class="btn btn--sm btn--gold" type="submit">Change number</button></form></details>
+      <details class="adminbox"><summary>Close membership and remove personal details</summary>
+        <form method="post" class="mform"><?= csrf_field() ?><input type="hidden" name="action" value="close"><input type="hidden" name="member_id" value="<?= $mid ?>">
+          <p class="fine">For a member's request to close their membership or delete their information (POPIA). Unused vouchers are cancelled and <?= max(0, $bal) ?> unused points lapse. Name, cellphone, date of birth and email are removed and cannot be recovered. Points and voucher records stay, under the member number only, for the accounting records. This cannot be undone.</p>
+          <label>How was the request received and checked?<input name="reason" required maxlength="200" placeholder="Email to admin@ on 22 Nov, ID checked"></label>
+          <label>Type the member number <?= e($mem['member_no']) ?> to confirm<input name="confirm" required autocomplete="off" style="text-transform:uppercase"></label>
+          <button class="btn btn--sm btn--line" type="submit">Close membership</button></form></details>
+      <?php endif; ?>
       <?php endif; ?>
     </div>
   </div>

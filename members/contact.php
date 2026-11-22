@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare('UPDATE enquiries SET ref = ? WHERE id = ?')->execute([$sentRef, $id]);
             record_attempt($ipKey);
             audit($m ? 'member' : 'system', $m ? (int)$m['id'] : null, 'enquiry_' . $kind, $m ? (int)$m['id'] : null, ['ref' => $sentRef]);
+            notify_new_enquiry($sentRef, $kind, $v['name'], $phone, $v['email'] ?: null, $v['message']);
         }
     }
 }

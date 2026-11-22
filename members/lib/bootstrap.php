@@ -204,3 +204,47 @@ function publish_due_facebook_posts(int $limit = 3): array {
     }
     return $done;
 }
+
+/* A closed membership keeps its points and voucher records but has its personal details removed. */
+function member_is_closed(array $m): bool { return str_starts_with((string)$m['phone'], 'X'); }
+
+/*
+ * Email the manager about a new Talk-to-us message. Uses the hosting's mail();
+ * the From address must be a real mailbox on gesondlifestyle.co.za. Returns false if not sent.
+ */
+function notify_new_enquiry(string $ref, string $kind, string $name, ?string $phone, ?string $email, string $message): bool {
+    $to = setting('notify_email');
+    if (!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)) return false;
+    $from = setting('notify_from', 'info@gesondlifestyle.co.za');
+    $labels = ['question' => 'Question', 'booking' => 'Booking or function', 'complaint' => 'COMPLAINT', 'idea' => 'Idea'];
+    $subject = ($kind === 'complaint' ? 'Complaint, reply today: ' : 'New message: ') . ($labels[$kind] ?? $kind) . ' ' . $ref;
+    $body = "A new message came in through the website's Talk to us page.\n\n"
+        . "Reference: $ref\nType: " . ($labels[$kind] ?? $kind) . "\nName: $name\n"
+        . 'Cellphone: ' . ($phone ? format_phone($phone) : '-') . "\nEmail: " . ($email ?: '-') . "\n\n"
+        . mb_substr($message, 0, 1500) . "\n\n"
+        . "Reply and record what was done in the staff Inbox:\n" . GR_SITE . "/members/staff/inbox.php\n\n"
+        . ($kind === 'complaint' ? "Complaints must be answered the same day.\n" : "Please reply within one working day.\n");
+    $headers = 'From: Gesond website <' . $from . ">\r\nReply-To: " . ($email && filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : $from)
+        . "\r\nContent-Type: text/plain; charset=UTF-8\r\nX-Mailer: Gesond";
+    $ok = @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers, '-f' . $from);
+    if (!$ok) audit('system', null, 'notify_failed', null, ['ref' => $ref]);
+    return $ok;
+}
+
+/* Once a day (from cron) check the Facebook connection still works, so a dead token shows on the dashboard before a post fails. */
+function check_facebook_health(bool $force = false): void {
+    $page = setting('fb_page_id'); $token = setting('fb_page_token');
+    if (!$page || !$token || !function_exists('curl_init')) { set_setting('fb_health', null); return; }
+    $last = (int)setting('fb_checked_at', '0');
+    if (!$force && time() - $last < 86400) return;
+    $ch = curl_init(GR_GRAPH . '/' . rawurlencode($page) . '?fields=name&access_token=' . rawurlencode($token));
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15]);
+    $raw = curl_exec($ch); $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+    if ($raw === false || $code === 0) return;                  // network hiccup: try again next run
+    $res = json_decode((string)$raw, true) ?: [];
+    set_setting('fb_checked_at', (string)time());
+    if (!empty($res['name'])) { set_setting('fb_health', null); return; }
+    $msg = mb_substr((string)($res['error']['message'] ?? ('HTTP ' . $code)), 0, 200);
+    if (setting('fb_health') !== $msg) audit('system', null, 'fb_connection_failed', null, ['error' => $msg]);
+    set_setting('fb_health', $msg);
+}

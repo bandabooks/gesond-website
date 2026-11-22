@@ -77,7 +77,9 @@ $alerts = [];
 if ($overdue) $alerts[] = ['crit', $overdue . ' message' . ($overdue > 1 ? 's' : '') . ' overdue (complaints over 1 day, others over 2 days)', 'inbox.php'];
 if ($fbFailed) $alerts[] = ['crit', $fbFailed . ' post' . ($fbFailed > 1 ? 's' : '') . ' failed to reach Facebook', 'posts.php'];
 if ($reversals['n'] > 0) $alerts[] = ['warn', $reversals['n'] . ' points reversal' . ($reversals['n'] > 1 ? 's' : '') . ' in this period (' . (int)$reversals['p'] . ' points). Check the reason for each', '#feed'];
+if (setting('fb_page_id') && setting('fb_page_token') && setting('fb_health')) $alerts[] = ['crit', 'Facebook connection stopped working. Get a new Page token in Settings', 'settings.php'];
 if (!(setting('fb_page_id') && setting('fb_page_token'))) $alerts[] = ['info', 'Facebook Page not connected', 'settings.php'];
+if (!setting('notify_email')) $alerts[] = ['info', 'Message alerts by email are off', 'settings.php'];
 if (!ai_provider()) $alerts[] = ['info', 'AI writing not connected', 'settings.php'];
 if ($postsUpcoming === 0) $alerts[] = ['info', 'No posts scheduled ahead', 'posts.php'];
 
@@ -113,7 +115,7 @@ page_head('Dashboard', '../', null, $s);
 <div class="dash__head">
   <div>
     <h1 class="display display--sm">Dashboard</h1>
-    <p class="muted">Gesond Rewards, guest messages and posts. Last <?= $days ?> days (<?= e(date('j M', strtotime($from))) ?> to <?= e(date('j M Y')) ?>). Updated <?= e(date('H:i')) ?>.</p>
+    <p class="muted">Gesond Rewards, guest messages and posts. Last <?= $days ?> days (<?= e(date('j M', strtotime($from))) ?> to <?= e(date('j M Y')) ?>). Updated <?= e(date('H:i')) ?>. <a class="link" href="export.php">Download records for the bookkeeper</a></p>
   </div>
   <nav class="filters" aria-label="Period">
     <?php foreach ([7 => '7 days', 30 => '30 days', 90 => '90 days'] as $k => $lab): ?><a class="<?= $k === $days ? 'on' : '' ?>" href="?p=<?= $k ?>"><?= $lab ?></a><?php endforeach; ?>

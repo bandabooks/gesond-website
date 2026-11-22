@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($token === '' && !setting('fb_page_token')) { flash('Paste the Page access token.', 'err'); redirect('settings.php'); }
         set_setting('fb_page_id', $page);
         if ($token !== '') set_setting('fb_page_token', $token);
+        set_setting('fb_health', null); set_setting('fb_checked_at', null);
         // Check the connection by reading the Page name with the token
         $ok = false; $name = '';
         if (function_exists('curl_init')) {
@@ -55,6 +56,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         redirect('settings.php');
     }
+    if ($action === 'alerts') {
+        $to = trim((string)($_POST['notify_email'] ?? ''));
+        $from = trim((string)($_POST['notify_from'] ?? ''));
+        if ($to !== '' && !filter_var($to, FILTER_VALIDATE_EMAIL)) { flash('Check the email address that receives alerts.', 'err'); redirect('settings.php'); }
+        if (!filter_var($from, FILTER_VALIDATE_EMAIL) || !str_ends_with(strtolower($from), '@gesondlifestyle.co.za')) { flash('The sending address must be a mailbox on gesondlifestyle.co.za, for example info@gesondlifestyle.co.za.', 'err'); redirect('settings.php'); }
+        set_setting('notify_email', $to ?: null);
+        set_setting('notify_from', $from);
+        audit('staff', $sid, 'alert_settings_saved', null, ['to' => $to, 'from' => $from]);
+        if ($to !== '' && !empty($_POST['send_test'])) {
+            $ok = notify_new_enquiry('GQ-TEST', 'question', 'Test message', null, null, 'This is a test from Gesond Settings. If you can read it, message alerts work.');
+            flash($ok ? 'Saved. A test email was sent to ' . $to . '. Check the inbox and the spam folder.' : 'Saved, but the server could not send the test email. Check that the mailbox ' . $from . ' exists in hPanel.', $ok ? 'ok' : 'err');
+        } else {
+            flash($to ? 'Saved. New messages will be emailed to ' . $to . '.' : 'Saved. Message alerts are off.');
+        }
+        redirect('settings.php');
+    }
+    if ($action === 'facebook_check') {
+        check_facebook_health(true);
+        $h = setting('fb_health');
+        flash($h ? 'Facebook connection is not working: ' . $h : 'Facebook connection is working.', $h ? 'err' : 'ok');
+        redirect('settings.php');
+    }
     if ($action === 'facebook_off') {
         set_setting('fb_page_token', null);
         audit('staff', $sid, 'fb_disconnected');
@@ -68,8 +91,22 @@ page_head('Settings', '../', null, $s);
 ?>
 <h1 class="display display--sm">Settings</h1>
 <section class="card-form postform">
+  <h2>Message alerts</h2>
+  <p>Status: <b><?= ($ne = setting('notify_email')) ? 'New messages are emailed to ' . e($ne) : 'Off' ?></b></p>
+  <p class="fine">Every new Talk to us message is emailed straight away, so bookings and complaints are seen before anyone logs in. Both addresses must exist; create them in hPanel under Emails first.</p>
+  <form method="post" class="mform" autocomplete="off">
+    <?= csrf_field() ?><input type="hidden" name="action" value="alerts">
+    <label>Send alerts to<input name="notify_email" type="email" value="<?= e(setting('notify_email')) ?>" placeholder="admin@gesondlifestyle.co.za"></label>
+    <label>Send from (a mailbox on gesondlifestyle.co.za)<input name="notify_from" type="email" value="<?= e(setting('notify_from', 'info@gesondlifestyle.co.za')) ?>" required></label>
+    <label class="check"><input type="checkbox" name="send_test" value="1" checked> Send a test email when I save</label>
+    <button class="btn btn--gold" type="submit">Save</button>
+  </form>
+</section>
+<section class="card-form postform">
   <h2>Facebook Page</h2>
-  <p>Status: <b><?= $fbOn ? 'Connected (Page ID ' . e($fbPage) . ')' : 'Not connected' ?></b></p>
+  <p>Status: <b><?= $fbOn ? 'Connected (Page ID ' . e($fbPage) . ')' : 'Not connected' ?></b><?php if ($fbOn && ($fh = setting('fb_health'))): ?> <span class="tag tag--bad">Not working</span><?php endif; ?></p>
+  <?php if ($fbOn && $fh): ?><p class="notice notice--err">Facebook said: <?= e($fh) ?>. Get a new Page token (steps below) and save it again.</p><?php endif; ?>
+  <?php if ($fbOn): ?><p class="fine">The connection is checked automatically once a day<?= setting('fb_checked_at') ? ', last on ' . e(date('j M Y H:i', (int)setting('fb_checked_at'))) : '' ?>.</p><?php endif; ?>
   <details>
     <summary>How to get the Page ID and access token</summary>
     <ol class="steps">
@@ -86,6 +123,7 @@ page_head('Settings', '../', null, $s);
     <button class="btn btn--gold" type="submit">Save and test</button>
   </form>
   <?php if ($fbOn): ?>
+  <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="facebook_check"><button class="linkbtn" type="submit">Check connection now</button></form>
   <form method="post" class="inline"><?= csrf_field() ?><input type="hidden" name="action" value="facebook_off"><button class="linkbtn" type="submit" onclick="return confirm('Stop posting to Facebook?')">Disconnect Facebook</button></form>
   <?php endif; ?>
 </section>
