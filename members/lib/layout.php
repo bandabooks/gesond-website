@@ -4,7 +4,7 @@ declare(strict_types=1);
 /* $base: path from the current page to /members/ ("" or "../") */
 function page_head(string $title, string $base = '', ?array $member = null, ?array $staff = null): void {
     $flash = flash();
-    $v = '20261122b';
+    $v = '20261122c';
     ?><!DOCTYPE html>
 <html lang="en-ZA">
 <head>
@@ -26,7 +26,8 @@ function page_head(string $title, string $base = '', ?array $member = null, ?arr
     <nav class="mem__nav" aria-label="Rewards">
 <?php if ($staff): ?>
       <span class="mem__who"><?= e($staff['full_name']) ?> (<?= e($staff['role']) ?>)</span>
-      <a href="<?= $base ?>staff/index.php">Till</a>
+<?php if ($staff['role'] === 'admin'): ?>      <a href="<?= $base ?>staff/dashboard.php">Dashboard</a>
+<?php endif; ?>      <a href="<?= $base ?>staff/index.php">Till</a>
       <a href="<?= $base ?>staff/inbox.php">Inbox</a>
       <a href="<?= $base ?>staff/posts.php">Posts</a>
 <?php if ($staff['role'] === 'admin'): ?>      <a href="<?= $base ?>staff/users.php">Staff</a>
@@ -65,7 +66,7 @@ function page_foot(): void {
     <p class="foot__warn">Not for sale to persons under the age of 18. Drink responsibly.</p>
   </div>
 </footer>
-<script src="/assets/js/pwa.js?v=<?= '20261122b' ?>" defer></script>
+<script src="/assets/js/pwa.js?v=<?= '20261122c' ?>" defer></script>
 </body>
 </html>
 <?php

@@ -25,7 +25,7 @@ if (!$s) {
                 $_SESSION['staff_id'] = (int)$row['id'];
                 db()->prepare('UPDATE staff SET last_login_at = NOW() WHERE id = ?')->execute([$row['id']]);
                 audit('staff', (int)$row['id'], 'staff_login');
-                redirect('index.php');
+                redirect($row['role'] === 'admin' ? 'dashboard.php' : 'index.php');
             }
             record_attempt($key);
             record_attempt('s-ip:' . client_ip());
